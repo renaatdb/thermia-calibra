@@ -1,0 +1,85 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Thermia Calibra Cool 7 BW",
+        "description": "Connect to a Thermia Calibra Cool 7 BW / Genesis heat pump over Modbus TCP.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "unit_id": "Unit ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the Thermia Calibra Cool 7 BW."
+    },
+    "abort": {
+      "already_configured": "This Thermia Calibra Cool 7 BW connection is already configured."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "passive_cooling_active": {
+        "name": "Mix valve 1 producing passive cooling"
+      }
+    },
+    "number": {
+      "comfort_wheel_setting": {
+        "name": "Comfort wheel setting"
+      },
+      "start_temperature_tap_water": {
+        "name": "Start temperature tap water"
+      },
+      "stop_temperature_tap_water": {
+        "name": "Stop temperature tap water"
+      }
+    },
+    "sensor": {
+      "cooling_start_temperature": {
+        "name": "Cooling start temperature"
+      },
+      "cooling_stop_temperature": {
+        "name": "Cooling stop temperature"
+      },
+      "heating_season_stop_temperature": {
+        "name": "Heating season stop temperature"
+      },
+      "cooling_minimum_outdoor_temperature_permitted": {
+        "name": "Cooling minimum outdoor temperature permitted"
+      },
+      "mix_valve_1_selected_mode": {
+        "name": "Mix valve 1 selected mode"
+      },
+      "tap_water_top_temperature": {
+        "name": "Tap water top temperature"
+      },
+      "tap_water_lower_temperature": {
+        "name": "Tap water lower temperature"
+      },
+      "tap_water_weighted_temperature": {
+        "name": "Tap water weighted temperature"
+      }
+    },
+    "switch": {
+      "enable_tap_water": {
+        "name": "Enable tap water"
+      },
+      "hot_water_boost": {
+        "name": "Hot water boost"
+      },
+      "enable_heat": {
+        "name": "Enable heat"
+      },
+      "enable_passive_cooling": {
+        "name": "Enable passive cooling"
+      },
+      "enable_anti_legionella": {
+        "name": "Enable anti legionella"
+      },
+      "enable_additional_heater_only": {
+        "name": "Enable additional heater only"
+      }
+    }
+  }
+}
