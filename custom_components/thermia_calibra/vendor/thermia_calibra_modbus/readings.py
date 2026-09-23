@@ -167,13 +167,35 @@ class GenesisHoldingRegisters(Component):
     )
     """Tap water stop temperature."""
 
-    cooling_start_temperature = gauge(105, 0.01, nan=THERMIA_MISSING_VALUE)
+    cooling_start_temperature = gauge(
+        105,
+        0.01,
+        nan=THERMIA_MISSING_VALUE,
+    )
     """Cooling start temperature."""
 
-    cooling_stop_temperature = gauge(106, 0.01, nan=THERMIA_MISSING_VALUE)
+    cooling_stop_temperature = gauge(
+        106,
+        0.01,
+        nan=THERMIA_MISSING_VALUE,
+    )
     """Cooling stop temperature."""
 
-    heating_season_stop_temperature = gauge(16, 0.01, nan=THERMIA_MISSING_VALUE)
+    outdoor_temperature_source = integer(117)
+    """Outdoor temperature source: 0 = physical PT1000, 1 = BMS."""
+
+    bms_outdoor_temperature = gauge(
+        118,
+        0.01,
+        nan=THERMIA_MISSING_VALUE,
+    )
+    """Outdoor temperature supplied through BMS."""
+
+    heating_season_stop_temperature = gauge(
+        16,
+        0.01,
+        nan=THERMIA_MISSING_VALUE,
+    )
     """Heating season stop temperature."""
 
     cooling_minimum_outdoor_temperature_permitted = gauge(
