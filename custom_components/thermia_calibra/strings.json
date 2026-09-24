@@ -23,6 +23,9 @@
       "hot_water_operational_status": {
         "name": "Hot water operational status"
       },
+      "heat_operational_status": {
+        "name": "Heat operational status"
+      },
       "anti_legionella_operational_status": {
         "name": "Anti legionella operational status"
       },
