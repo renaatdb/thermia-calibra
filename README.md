@@ -24,6 +24,7 @@ Current support includes:
 - enable passive cooling
 - enable tap water
 - hot water temperature settings
+- hot water and anti-legionella operational status
 - selected operational status entities
 
 ## Installation
