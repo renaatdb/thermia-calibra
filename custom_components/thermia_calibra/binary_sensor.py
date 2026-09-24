@@ -32,6 +32,18 @@ class ThermiaCalibraBinarySensorDescription(BinarySensorEntityDescription):
 
 BINARY_SENSORS: tuple[ThermiaCalibraBinarySensorDescription, ...] = (
     ThermiaCalibraBinarySensorDescription(
+        key="hot_water_operational_status",
+        name="Hot Water Operational Status",
+        report_name="input_registers",
+        value_fn=lambda device: device.hot_water_operational,
+    ),
+    ThermiaCalibraBinarySensorDescription(
+        key="anti_legionella_operational_status",
+        name="Anti Legionella Operational Status",
+        report_name="input_registers",
+        value_fn=lambda device: device.anti_legionella_operational,
+    ),
+    ThermiaCalibraBinarySensorDescription(
         key="passive_cooling_active",
         name="Passive Cooling Active",
         report_name="input_registers",

@@ -20,6 +20,12 @@
   },
   "entity": {
     "binary_sensor": {
+      "hot_water_operational_status": {
+        "name": "Hot water operational status"
+      },
+      "anti_legionella_operational_status": {
+        "name": "Anti legionella operational status"
+      },
       "passive_cooling_active": {
         "name": "Mix valve 1 producing passive cooling"
       }
