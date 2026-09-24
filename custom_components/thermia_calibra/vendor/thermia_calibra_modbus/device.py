@@ -66,6 +66,22 @@ class ThermiaCalibra:
         return self.HEATPUMP_STATUS_BY_CODE.get(code, f"Unknown ({code})")
 
     @property
+    def hot_water_operational(self) -> bool | None:
+        """Return whether tap-water production is currently active."""
+        status = self.heatpump_status
+        if status is None:
+            return None
+        return status == "Hot water"
+
+    @property
+    def anti_legionella_operational(self) -> bool | None:
+        """Return whether the anti-legionella cycle is currently active."""
+        status = self.heatpump_status
+        if status is None:
+            return None
+        return status == "Anti legionella"
+
+    @property
     def active_alarms(self) -> int | None:
         """Return the number of active alarm classes."""
         alarm_values = (
