@@ -74,6 +74,14 @@ class ThermiaCalibra:
         return status == "Hot water"
 
     @property
+    def heat_operational(self) -> bool | None:
+        """Return whether space heating is currently active."""
+        status = self.heatpump_status
+        if status is None:
+            return None
+        return status == "Heat"
+
+    @property
     def anti_legionella_operational(self) -> bool | None:
         """Return whether the anti-legionella cycle is currently active."""
         status = self.heatpump_status
