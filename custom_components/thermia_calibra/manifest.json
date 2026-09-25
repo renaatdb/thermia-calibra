@@ -2,10 +2,12 @@
   "domain": "thermia_calibra",
   "name": "Thermia Calibra Cool 7 BW",
   "after_dependencies": ["modbus"],
-  "codeowners": [],
+  "codeowners": ["@renaatdb"],
   "config_flow": true,
   "documentation": "https://github.com/renaatdb/thermia-calibra",
+  "integration_type": "device",
   "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/renaatdb/thermia-calibra/issues",
   "requirements": ["modbus-connection>=4.8.1,<5"],
-  "version": "0.1.7"
+  "version": "0.1.8"
 }
