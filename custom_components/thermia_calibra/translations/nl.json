@@ -42,6 +42,9 @@
       },
       "stop_temperature_tap_water": {
         "name": "Stoptemperatuur tapwater"
+      },
+      "bms_outdoor_temperature_input": {
+        "name": "BMS-buitentemperatuur invoer"
       }
     },
     "sensor": {
@@ -88,6 +91,11 @@
       },
       "enable_additional_heater_only": {
         "name": "Alleen bijverwarming inschakelen"
+      }
+    },
+    "select": {
+      "outdoor_temperature_source_control": {
+        "name": "Bron buitentemperatuur"
       }
     }
   }

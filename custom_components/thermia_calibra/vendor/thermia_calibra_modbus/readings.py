@@ -181,13 +181,17 @@ class GenesisHoldingRegisters(Component):
     )
     """Cooling stop temperature."""
 
-    outdoor_temperature_source = integer(117)
+    outdoor_temperature_source = integer(
+        117,
+        writable=_range_validator(0, 1),
+    )
     """Outdoor temperature source: 0 = physical PT1000, 1 = BMS."""
 
     bms_outdoor_temperature = gauge(
         118,
         0.01,
         nan=THERMIA_MISSING_VALUE,
+        writable=_range_validator(-40, 60),
     )
     """Outdoor temperature supplied through BMS."""
 

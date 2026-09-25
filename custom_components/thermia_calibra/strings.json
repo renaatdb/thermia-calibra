@@ -42,6 +42,9 @@
       },
       "stop_temperature_tap_water": {
         "name": "Stop temperature tap water"
+      },
+      "bms_outdoor_temperature_input": {
+        "name": "BMS outdoor temperature input"
       }
     },
     "sensor": {
@@ -88,6 +91,11 @@
       },
       "enable_additional_heater_only": {
         "name": "Enable additional heater only"
+      }
+    },
+    "select": {
+      "outdoor_temperature_source_control": {
+        "name": "Outdoor temperature source"
       }
     }
   }
