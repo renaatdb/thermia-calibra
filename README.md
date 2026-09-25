@@ -1,6 +1,6 @@
-# Thermia Calibra
+# Thermia Calibra Cool 7 BW
 
-Unofficial Home Assistant custom integration for Thermia Calibra heat pumps. It uses Home Assistant's native shared Modbus TCP layer, so integrations using the same connection do not open competing Modbus clients.
+Unofficial Home Assistant custom integration for the Thermia Calibra Cool 7 BW heat pump. It uses Home Assistant's native shared Modbus TCP layer, so integrations using the same connection do not open competing Modbus clients.
 
 ## Status
 
@@ -36,7 +36,7 @@ Until this integration is included in the default HACS catalogue, add it as a cu
 2. Open the menu in the top-right corner and choose **Custom repositories**.
 3. Add `https://github.com/renaatdb/thermia-calibra`.
 4. Select **Integration** as the type.
-5. Find **Thermia Calibra**, choose **Download**, and restart Home Assistant.
+5. Find **Thermia Calibra Cool 7 BW**, choose **Download**, and restart Home Assistant.
 
 ### Manual
 

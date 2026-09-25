@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## 0.1.9 - 2026-09-25
+
+- Use the tested model name, Thermia Calibra Cool 7 BW, consistently in HACS and the public documentation.
+- Replace the low-resolution artwork with the sharp 256x256 Thermia icon from Home Assistant Brands.
+
 ## 0.1.8 - 2026-09-25
 
 - Prepare the integration for public HACS installation.
