@@ -1,0 +1,94 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Thermia Calibra Cool 7 BW",
+        "description": "Verbind met een Thermia Calibra Cool 7 BW / Genesis-warmtepomp via Modbus TCP.",
+        "data": {
+          "host": "Host",
+          "port": "Poort",
+          "unit_id": "Unit-ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de Thermia Calibra Cool 7 BW."
+    },
+    "abort": {
+      "already_configured": "Deze Thermia Calibra Cool 7 BW-verbinding is al geconfigureerd."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hot_water_operational_status": {
+        "name": "Tapwater actief"
+      },
+      "heat_operational_status": {
+        "name": "Verwarming actief"
+      },
+      "anti_legionella_operational_status": {
+        "name": "Anti-legionella actief"
+      },
+      "passive_cooling_active": {
+        "name": "Mengklep 1 produceert passieve koeling"
+      }
+    },
+    "number": {
+      "comfort_wheel_setting": {
+        "name": "Comfortwielinstelling"
+      },
+      "start_temperature_tap_water": {
+        "name": "Starttemperatuur tapwater"
+      },
+      "stop_temperature_tap_water": {
+        "name": "Stoptemperatuur tapwater"
+      }
+    },
+    "sensor": {
+      "cooling_start_temperature": {
+        "name": "Starttemperatuur koeling"
+      },
+      "cooling_stop_temperature": {
+        "name": "Stoptemperatuur koeling"
+      },
+      "heating_season_stop_temperature": {
+        "name": "Stoptemperatuur verwarmingsseizoen"
+      },
+      "cooling_minimum_outdoor_temperature_permitted": {
+        "name": "Minimale buitentemperatuur voor koeling"
+      },
+      "mix_valve_1_selected_mode": {
+        "name": "Geselecteerde modus mengklep 1"
+      },
+      "tap_water_top_temperature": {
+        "name": "Bovenste tapwatertemperatuur"
+      },
+      "tap_water_lower_temperature": {
+        "name": "Onderste tapwatertemperatuur"
+      },
+      "tap_water_weighted_temperature": {
+        "name": "Gewogen tapwatertemperatuur"
+      }
+    },
+    "switch": {
+      "enable_tap_water": {
+        "name": "Tapwater inschakelen"
+      },
+      "hot_water_boost": {
+        "name": "Tapwaterboost"
+      },
+      "enable_heat": {
+        "name": "Verwarming inschakelen"
+      },
+      "enable_passive_cooling": {
+        "name": "Passieve koeling inschakelen"
+      },
+      "enable_anti_legionella": {
+        "name": "Anti-legionella inschakelen"
+      },
+      "enable_additional_heater_only": {
+        "name": "Alleen bijverwarming inschakelen"
+      }
+    }
+  }
+}
