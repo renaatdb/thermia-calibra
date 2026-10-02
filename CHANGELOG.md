@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here.
 
+## 0.1.10 - 2026-10-02
+
+- Add a control for the externally supplied outdoor temperature on Modbus
+  register 118.
+- Add a selector for the physical PT1000 or external Modbus outdoor-temperature
+  source on register 117.
+- Replace the ambiguous user-facing term BMS with External outdoor temperature
+  (Modbus), while retaining the official Thermia register terminology internally.
+- Keep the former read-only source sensor disabled by default for compatibility.
+
 ## 0.1.9 - 2026-09-25
 
 - Use the tested model name, Thermia Calibra Cool 7 BW, consistently in HACS and the public documentation.

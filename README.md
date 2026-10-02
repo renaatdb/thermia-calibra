@@ -21,10 +21,28 @@ Requirements:
 - controls for heating, passive cooling, tap water and anti-legionella
 - hot-water boost
 - comfort-wheel and hot-water temperature settings
-- BMS outdoor temperature and selected outdoor-temperature source
+- external outdoor-temperature input through Modbus and a selectable source
 - 30-second local polling through Home Assistant's shared Modbus connection
 
 Some duplicate or model-specific sensors and the additional-heater-only switch are disabled by default. They can be enabled from the entity settings when needed.
+
+### External outdoor temperature
+
+Thermia calls an externally supplied outdoor temperature a BMS value in its
+Modbus documentation. In Home Assistant the integration uses the clearer name
+**External outdoor temperature (Modbus)**.
+
+To use it:
+
+1. Write a valid temperature between -50 and 200 C to **External Outdoor
+   Temperature Input (Modbus)**.
+2. Select **External outdoor temperature (Modbus)** as **Outdoor Temperature
+   Source**.
+3. Keep updating the value at least once every 12 hours. The heat pump falls
+   back to its physical PT1000 sensor when the external value is invalid or
+   stale.
+
+Select **Physical outdoor sensor (PT1000)** to return to the wired sensor.
 
 ## Installation
 
