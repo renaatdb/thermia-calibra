@@ -42,6 +42,14 @@
       },
       "stop_temperature_tap_water": {
         "name": "Stop temperature tap water"
+      },
+      "bms_outdoor_temperature_input": {
+        "name": "External outdoor temperature input (Modbus)"
+      }
+    },
+    "select": {
+      "outdoor_temperature_source": {
+        "name": "Outdoor temperature source"
       }
     },
     "sensor": {

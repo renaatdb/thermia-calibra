@@ -127,7 +127,7 @@ SENSORS: tuple[ThermiaCalibraSensorDescription, ...] = (
     ),
     ThermiaCalibraSensorDescription(
         key="bms_outdoor_temperature",
-        name="BMS / Zehnder Outdoor Temperature",
+        name="External Outdoor Temperature (Modbus)",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -136,12 +136,13 @@ SENSORS: tuple[ThermiaCalibraSensorDescription, ...] = (
     ),
     ThermiaCalibraSensorDescription(
         key="outdoor_temperature_source",
-        name="Outdoor Temperature Source",
+        name="Outdoor Temperature Source (Read-only)",
+        entity_registry_enabled_default=False,
         report_name="holding_registers",
         value_fn=lambda device: (
-            "BMS / Zehnder"
+            "External outdoor temperature (Modbus)"
             if device.holding_registers.outdoor_temperature_source == 1
-            else "Physical PT1000"
+            else "Physical outdoor sensor (PT1000)"
             if device.holding_registers.outdoor_temperature_source == 0
             else f"Unknown ({device.holding_registers.outdoor_temperature_source})"
         ),

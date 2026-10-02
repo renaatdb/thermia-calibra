@@ -65,6 +65,17 @@ NUMBERS: tuple[ThermiaCalibraNumberDescription, ...] = (
         mode=NumberMode.SLIDER,
         field_name="stop_temperature_tap_water",
     ),
+    ThermiaCalibraNumberDescription(
+        key="bms_outdoor_temperature_input",
+        name="External Outdoor Temperature Input (Modbus)",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=-50,
+        native_max_value=200,
+        native_step=0.1,
+        mode=NumberMode.BOX,
+        field_name="bms_outdoor_temperature",
+    ),
 )
 
 
