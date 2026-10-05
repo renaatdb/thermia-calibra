@@ -1,5 +1,5 @@
 {
-  "name": "Thermia Calibra Cool 7 BW",
+  "name": "Thermia Calibra Modbus",
   "content_in_root": false,
   "homeassistant": "2026.9.0",
   "render_readme": true

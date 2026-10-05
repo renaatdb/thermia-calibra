@@ -6,7 +6,19 @@ from collections.abc import Callable
 
 from modbus_connection.model import Component, coil, discrete_input, gauge, integer, uint32
 
+from .native_settings import NATIVE_SETTINGS, validate_native_setting
+
 THERMIA_MISSING_VALUE = 0x4E20
+
+
+def _native_setting_gauge(key: str):
+    spec = NATIVE_SETTINGS[key]
+    return gauge(
+        spec.address,
+        0.01,
+        nan=THERMIA_MISSING_VALUE,
+        writable=lambda value: validate_native_setting(key, value),
+    )
 
 
 def _range_validator(min_value: float, max_value: float) -> Callable[[float], float]:
@@ -195,10 +207,8 @@ class GenesisHoldingRegisters(Component):
     )
     """Outdoor temperature supplied through BMS."""
 
-    heating_season_stop_temperature = gauge(
-        16,
-        0.01,
-        nan=THERMIA_MISSING_VALUE,
+    heating_season_stop_temperature = _native_setting_gauge(
+        "heating_season_stop_temperature"
     )
     """Heating season stop temperature."""
 
@@ -211,6 +221,49 @@ class GenesisHoldingRegisters(Component):
 
     mix_valve_1_selected_mode = integer(298)
     """Selected mode for mix valve 1."""
+
+
+class GenesisHeatingSettings(Component):
+    """Optional heating limits and the seven native curve supply points."""
+
+    register_space = "holding"
+    max_gap = 0
+    register_ranges = ((3, 4), (6, 12))
+
+    max_supply_temperature = _native_setting_gauge("max_supply_temperature")
+    min_supply_temperature = _native_setting_gauge("min_supply_temperature")
+    heat_curve_supply_1 = _native_setting_gauge("heat_curve_supply_1")
+    heat_curve_supply_2 = _native_setting_gauge("heat_curve_supply_2")
+    heat_curve_supply_3 = _native_setting_gauge("heat_curve_supply_3")
+    heat_curve_supply_4 = _native_setting_gauge("heat_curve_supply_4")
+    heat_curve_supply_5 = _native_setting_gauge("heat_curve_supply_5")
+    heat_curve_supply_6 = _native_setting_gauge("heat_curve_supply_6")
+    heat_curve_supply_7 = _native_setting_gauge("heat_curve_supply_7")
+
+
+class GenesisHeatingCurveInputs(Component):
+    """Optional outdoor temperatures corresponding to the seven curve points."""
+
+    register_space = "input"
+    max_gap = 0
+    register_ranges = ((20, 26),)
+
+    heat_curve_outdoor_1 = gauge(20, 0.01, nan=THERMIA_MISSING_VALUE)
+    heat_curve_outdoor_2 = gauge(21, 0.01, nan=THERMIA_MISSING_VALUE)
+    heat_curve_outdoor_3 = gauge(22, 0.01, nan=THERMIA_MISSING_VALUE)
+    heat_curve_outdoor_4 = gauge(23, 0.01, nan=THERMIA_MISSING_VALUE)
+    heat_curve_outdoor_5 = gauge(24, 0.01, nan=THERMIA_MISSING_VALUE)
+    heat_curve_outdoor_6 = gauge(25, 0.01, nan=THERMIA_MISSING_VALUE)
+    heat_curve_outdoor_7 = gauge(26, 0.01, nan=THERMIA_MISSING_VALUE)
+
+
+class GenesisCoolingSettings(Component):
+    """Optional native setpoint for passive-cooling mixing valve 1."""
+
+    register_space = "holding"
+    max_gap = 0
+
+    passive_cooling_supply_target = _native_setting_gauge("passive_cooling_supply_target")
 
 
 class GenesisHotWaterRegisters(Component):

@@ -3,10 +3,11 @@
 from datetime import timedelta
 
 DOMAIN = "thermia_calibra"
+INTEGRATION_NAME = "Thermia Calibra Modbus"
 MANUFACTURER = "Thermia"
 DEVICE_NAME = "Thermia Calibra Cool 7 BW"
 DEVICE_MODEL = "Calibra Cool 7 BW / Genesis"
-DEFAULT_NAME = DEVICE_NAME
+DEFAULT_NAME = INTEGRATION_NAME
 DEFAULT_PORT = 502
 DEFAULT_UNIT_ID = 1
 CONF_UNIT_ID = "unit_id"

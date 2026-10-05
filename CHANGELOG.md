@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented here.
 
+## 0.1.11b1 - 2026-10-05 (Pre-release)
+
+- Rename the visible integration and HACS entry to Thermia Calibra Modbus.
+- Retain the repository, domain, existing entity keys and device identifiers.
+- Add eleven disabled-by-default native temperature controls: heating season
+  stop, minimum/maximum heating supply, seven heating-curve points, and the
+  passive-cooling supply target for mixing valve 1.
+- Expose the matching outdoor temperature on each heating-curve control.
+- Isolate optional register groups, validate writes and confirm controller
+  readback; prevent minimum supply from exceeding maximum supply.
+- Add English/Dutch labels and simulated Modbus regression tests.
+- These new controls require validation on a physical Calibra Cool 7 BW before
+  publishing a stable release. Other Calibra models are not yet verified.
+
 ## 0.1.10 - 2026-10-02
 
 - Add a control for the externally supplied outdoor temperature on Modbus

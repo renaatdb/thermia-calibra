@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .native_settings import NATIVE_SETTINGS
+
 
 @dataclass(frozen=True)
 class RegisterDefinition:
@@ -411,4 +413,18 @@ REGISTER_CATALOG: tuple[RegisterDefinition, ...] = (
         "bool",
         1,
     ),
+)
+
+# Keep the established catalog keys and append only newly modelled registers.
+REGISTER_CATALOG += tuple(
+    RegisterDefinition(spec.key, spec.name, "holding", spec.address, "int16", 0.01, "C", 0x4E20)
+    for spec in NATIVE_SETTINGS.values()
+    if spec.key != "heating_season_stop_temperature"
+)
+REGISTER_CATALOG += tuple(
+    RegisterDefinition(
+        f"heat_curve_outdoor_{i + 1}", f"Heating Curve Outdoor Point {i + 1}",
+        "input", 20 + i, "int16", 0.01, "C", 0x4E20,
+    )
+    for i in range(7)
 )
