@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## 0.1.11 - Unreleased
+## 0.1.11b1 - 2026-10-05 (Pre-release)
 
 - Rename the visible integration and HACS entry to Thermia Calibra Modbus.
 - Retain the repository, domain, existing entity keys and device identifiers.

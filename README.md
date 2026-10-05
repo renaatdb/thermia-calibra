@@ -6,7 +6,7 @@ Unofficial Home Assistant custom integration for Thermia Calibra heat pumps. It 
 
 This integration is developed and tested on a **Thermia Calibra Cool 7 BW / Genesis**. Other Thermia models may use different registers and are not yet confirmed to work.
 
-The new native settings in 0.1.11 are a test candidate. Their register addresses
+The new native settings in 0.1.11b1 are a beta test candidate. Their register addresses
 follow the domestic Genesis 17.1 protocol (ACMBDH01UG0402); they have been tested
 with simulated Modbus replies, but still need verification on the physical pump.
 
