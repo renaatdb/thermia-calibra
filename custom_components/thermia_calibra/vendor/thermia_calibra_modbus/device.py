@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
+import math
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 
+from .native_settings import NATIVE_SETTINGS, validate_native_setting
 from .readings import (
     GenesisCoils,
+    GenesisCoolingSettings,
     GenesisDiscreteInputs,
+    GenesisHeatingCurveInputs,
+    GenesisHeatingSettings,
     GenesisHoldingRegisters,
     GenesisHotWaterRegisters,
     GenesisInputRegisters,
@@ -36,6 +42,10 @@ class ThermiaCalibra:
         self.holding_registers = GenesisHoldingRegisters(unit)
         self.discrete_inputs = GenesisDiscreteInputs(unit)
         self.hot_water_registers = GenesisHotWaterRegisters(unit)
+        self.heating_settings = GenesisHeatingSettings(unit)
+        self.heating_curve_inputs = GenesisHeatingCurveInputs(unit)
+        self.cooling_settings = GenesisCoolingSettings(unit)
+        self._native_write_lock = asyncio.Lock()
 
     HEATPUMP_STATUS_BY_CODE = {
         1: "Manual operation",
@@ -122,6 +132,8 @@ class ThermiaCalibra:
             self.hot_water_registers,
             report,
         )
+        for name in ("heating_settings", "heating_curve_inputs", "cooling_settings"):
+            await self._async_update_component(name, getattr(self, name), report)
         return report
 
     async def async_write_coil(self, field: str, value: bool) -> None:
@@ -135,6 +147,36 @@ class ThermiaCalibra:
     async def async_write_hot_water_register(self, field: str, value: float) -> None:
         """Write a Thermia hot-water control register."""
         await self.hot_water_registers.write(field, value)
+
+    async def async_write_native_setting(self, field: str, value: float) -> None:
+        """Read, validate, write and verify one supported native setting."""
+        value = validate_native_setting(field, value)
+        spec = NATIVE_SETTINGS[field]
+        component = getattr(self, spec.report_name)
+        async with self._native_write_lock:
+            await component.async_update(notify=False)
+            current = getattr(component, field)
+            if current is None or not math.isfinite(current):
+                raise ValueError(f"{spec.name} has no valid controller readback")
+
+            if field in ("min_supply_temperature", "max_supply_temperature"):
+                minimum = (
+                    value if field == "min_supply_temperature"
+                    else component.min_supply_temperature
+                )
+                maximum = (
+                    value if field == "max_supply_temperature"
+                    else component.max_supply_temperature
+                )
+                if minimum is None or maximum is None or minimum > maximum:
+                    raise ValueError("Heating supply minimum must not exceed maximum")
+
+            await component.write(field, value)
+            await component.async_update(notify=False)
+            actual = getattr(component, field)
+            if actual is None or not math.isclose(actual, value, rel_tol=0, abs_tol=0.005):
+                raise ValueError(f"{spec.name} write was not confirmed by the controller")
+            component.notify()
 
     async def _async_update_component(
         self,

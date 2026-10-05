@@ -81,3 +81,14 @@ class ThermiaCalibraCoordinator(DataUpdateCoordinator[UpdateReport]):
             ) from err
 
         await self.async_request_refresh()
+
+    async def async_write_native_setting(self, field: str, value: float) -> None:
+        """Write a native setting with controller readback verification."""
+        try:
+            await self.device.async_write_native_setting(field, value)
+        except (AttributeError, ModbusError, ValueError) as err:
+            raise HomeAssistantError(
+                f"Failed to write Thermia setting {field}: {err}"
+            ) from err
+        finally:
+            await self.async_request_refresh()

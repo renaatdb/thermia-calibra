@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from homeassistant.components.number import (
@@ -11,7 +12,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, UnitOfTemperature
+from homeassistant.const import CONF_HOST, CONF_PORT, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,6 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_UNIT_ID, DEVICE_MODEL, DEVICE_NAME, DOMAIN, MANUFACTURER
 from .coordinator import ThermiaCalibraCoordinator
+from .vendor.thermia_calibra_modbus.native_settings import NATIVE_SETTINGS
 
 NumberValue = int | float | None
 
@@ -29,6 +31,7 @@ class ThermiaCalibraNumberDescription(NumberEntityDescription):
 
     field_name: str
     report_name: str = "holding_registers"
+    native_setting: bool = False
 
 
 NUMBERS: tuple[ThermiaCalibraNumberDescription, ...] = (
@@ -76,6 +79,25 @@ NUMBERS: tuple[ThermiaCalibraNumberDescription, ...] = (
         mode=NumberMode.BOX,
         field_name="bms_outdoor_temperature",
     ),
+    *(
+        ThermiaCalibraNumberDescription(
+            key=spec.key,
+            name=spec.name,
+            translation_key=spec.key,
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            native_min_value=spec.min_value,
+            native_max_value=spec.max_value,
+            native_step=spec.step,
+            mode=NumberMode.SLIDER,
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
+            field_name=spec.key,
+            report_name=spec.report_name,
+            native_setting=True,
+        )
+        for spec in NATIVE_SETTINGS.values()
+    ),
 )
 
 
@@ -120,18 +142,55 @@ class ThermiaCalibraNumber(
             super().available
             and self.coordinator.data is not None
             and self.entity_description.report_name in self.coordinator.data.updated
+            and (
+                not self.entity_description.native_setting
+                or self.native_value is not None
+            )
         )
 
     @property
     def native_value(self) -> NumberValue:
         """Return the current number value."""
-        return getattr(
-            self.coordinator.device.holding_registers,
+        value = getattr(
+            getattr(self.coordinator.device, self.entity_description.report_name),
             self.entity_description.field_name,
         )
+        if self.entity_description.native_setting and (
+            value is None or not math.isfinite(value)
+        ):
+            return None
+        return value
+
+    @property
+    def extra_state_attributes(self) -> dict[str, int | float | None] | None:
+        """Identify native registers and the matching outdoor curve point."""
+        if not self.entity_description.native_setting:
+            return None
+        key = self.entity_description.field_name
+        attributes: dict[str, int | float | None] = {
+            "holding_register_address": NATIVE_SETTINGS[key].address,
+        }
+        if key.startswith("heat_curve_supply_"):
+            point = key.removeprefix("heat_curve_supply_")
+            outdoor = None
+            if (
+                self.coordinator.data is not None
+                and "heating_curve_inputs" in self.coordinator.data.updated
+            ):
+                outdoor = getattr(
+                    self.coordinator.device.heating_curve_inputs,
+                    f"heat_curve_outdoor_{point}",
+                )
+            attributes["outdoor_temperature"] = outdoor
+        return attributes
 
     async def async_set_native_value(self, value: float) -> None:
         """Write the selected number value."""
+        if self.entity_description.native_setting:
+            await self.coordinator.async_write_native_setting(
+                self.entity_description.field_name, value,
+            )
+            return
         await self.coordinator.async_write_holding_register(
             self.entity_description.field_name,
             value,

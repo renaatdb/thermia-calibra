@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Thermia Calibra Cool 7 BW",
-        "description": "Connect to a Thermia Calibra Cool 7 BW / Genesis heat pump over Modbus TCP.",
+        "title": "Thermia Calibra Modbus",
+        "description": "Connect to a Thermia Calibra heat pump over Modbus TCP. Tested on Calibra Cool 7 BW / Genesis.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -12,10 +12,10 @@
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to the Thermia Calibra Cool 7 BW."
+      "cannot_connect": "Cannot connect to the Thermia Calibra."
     },
     "abort": {
-      "already_configured": "This Thermia Calibra Cool 7 BW connection is already configured."
+      "already_configured": "This Thermia Calibra connection is already configured."
     }
   },
   "entity": {
@@ -45,6 +45,39 @@
       },
       "bms_outdoor_temperature_input": {
         "name": "External outdoor temperature input (Modbus)"
+      },
+      "heating_season_stop_temperature": {
+        "name": "Heating season stop temperature"
+      },
+      "min_supply_temperature": {
+        "name": "Minimum heating supply temperature"
+      },
+      "max_supply_temperature": {
+        "name": "Maximum heating supply temperature"
+      },
+      "heat_curve_supply_1": {
+        "name": "Heating curve supply point 1"
+      },
+      "heat_curve_supply_2": {
+        "name": "Heating curve supply point 2"
+      },
+      "heat_curve_supply_3": {
+        "name": "Heating curve supply point 3"
+      },
+      "heat_curve_supply_4": {
+        "name": "Heating curve supply point 4"
+      },
+      "heat_curve_supply_5": {
+        "name": "Heating curve supply point 5"
+      },
+      "heat_curve_supply_6": {
+        "name": "Heating curve supply point 6"
+      },
+      "heat_curve_supply_7": {
+        "name": "Heating curve supply point 7"
+      },
+      "passive_cooling_supply_target": {
+        "name": "Passive cooling supply target"
       }
     },
     "select": {
