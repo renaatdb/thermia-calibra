@@ -1,8 +1,18 @@
+# Third-party notices
+
+The optional thermostat policy copied from the user-supplied
+`thermia-genesis-modbus` 0.1.12 archive is no longer included as of 0.1.13b1.
+No Genesis Home Assistant entities, services or entry IDs are imported.
+
+The native-setting register definitions and software-limit choices are adapted
+from the MIT-licensed `thermia-genesis-modbus` 0.1.9 archive. The transport and
+entities continue to use this repository's own device modelling and Home
+Assistant shared Modbus connection.
+
+The source archive includes the following license notice:
+
 MIT License
 
-Copyright (c) 2026 renaatdb
-
-Portions adapted from thermia-genesis-modbus 0.1.9:
 Copyright (c) 2026 Thermia PV contributors
 Reference implementations: Copyright (c) 2026 renaatdb; Copyright (c) 2021 cjne
 

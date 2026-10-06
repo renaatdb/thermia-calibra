@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Thermia Calibra Cool 7 BW",
-        "description": "Verbind met een Thermia Calibra Cool 7 BW / Genesis-warmtepomp via Modbus TCP.",
+        "title": "Thermia Calibra Modbus",
+        "description": "Verbind met een Thermia Calibra-warmtepomp via Modbus TCP. Getest op Calibra Cool 7 BW / Genesis.",
         "data": {
           "host": "Host",
           "port": "Poort",
@@ -12,13 +12,18 @@
       }
     },
     "error": {
-      "cannot_connect": "Kan geen verbinding maken met de Thermia Calibra Cool 7 BW."
+      "cannot_connect": "Kan geen verbinding maken met de Thermia Calibra."
     },
     "abort": {
-      "already_configured": "Deze Thermia Calibra Cool 7 BW-verbinding is al geconfigureerd."
+      "already_configured": "Deze Thermia Calibra-verbinding is al geconfigureerd."
     }
   },
   "entity": {
+    "climate": {
+      "hot_water": {
+        "name": "Warmwaterbediening"
+      }
+    },
     "binary_sensor": {
       "hot_water_operational_status": {
         "name": "Tapwater actief"
@@ -45,6 +50,39 @@
       },
       "bms_outdoor_temperature_input": {
         "name": "Externe buitentemperatuurinvoer (Modbus)"
+      },
+      "heating_season_stop_temperature": {
+        "name": "Stoptemperatuur verwarmingsseizoen"
+      },
+      "min_supply_temperature": {
+        "name": "Minimale aanvoertemperatuur verwarming"
+      },
+      "max_supply_temperature": {
+        "name": "Maximale aanvoertemperatuur verwarming"
+      },
+      "heat_curve_supply_1": {
+        "name": "Stooklijn aanvoerpunt 1"
+      },
+      "heat_curve_supply_2": {
+        "name": "Stooklijn aanvoerpunt 2"
+      },
+      "heat_curve_supply_3": {
+        "name": "Stooklijn aanvoerpunt 3"
+      },
+      "heat_curve_supply_4": {
+        "name": "Stooklijn aanvoerpunt 4"
+      },
+      "heat_curve_supply_5": {
+        "name": "Stooklijn aanvoerpunt 5"
+      },
+      "heat_curve_supply_6": {
+        "name": "Stooklijn aanvoerpunt 6"
+      },
+      "heat_curve_supply_7": {
+        "name": "Stooklijn aanvoerpunt 7"
+      },
+      "passive_cooling_supply_target": {
+        "name": "Gewenste aanvoertemperatuur passieve koeling"
       }
     },
     "select": {

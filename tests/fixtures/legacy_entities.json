@@ -1,0 +1,85 @@
+{
+  "sensor": {
+    "keys": [
+      "heatpump",
+      "return_line_temperature",
+      "supply_line_temperature",
+      "compressor_speed_rpm",
+      "condenser_in_temperature",
+      "condenser_out_temperature",
+      "brine_in_temperature",
+      "brine_out_temperature",
+      "system_supply_line_temperature",
+      "outdoor_temperature",
+      "bms_outdoor_temperature",
+      "outdoor_temperature_source",
+      "cooling_start_temperature",
+      "cooling_stop_temperature",
+      "heating_season_stop_temperature",
+      "cooling_minimum_outdoor_temperature_permitted",
+      "mix_valve_1_selected_mode",
+      "tap_water_top_temperature",
+      "tap_water_lower_temperature",
+      "tap_water_weighted_temperature",
+      "system_supply_line_calculated_set_point",
+      "system_return_line_temperature",
+      "condenser_circulation_pump_speed",
+      "brine_circulation_pump_speed",
+      "tap_water_valve_position",
+      "compressor_operating_hours",
+      "tap_water_operating_hours",
+      "external_additional_heater_operating_hours",
+      "compressor_speed_percent",
+      "compressor_current_gear",
+      "mix_valve_cooling_opening_degree",
+      "active_alarms"
+    ],
+    "unique_id": [
+      "f\"{entry.entry_id}_{description.key}\""
+    ]
+  },
+  "binary_sensor": {
+    "keys": [
+      "hot_water_operational_status",
+      "heat_operational_status",
+      "anti_legionella_operational_status",
+      "passive_cooling_active",
+      "maximum_time_for_anti_legionella_exceeded"
+    ],
+    "unique_id": [
+      "f\"{entry.entry_id}_{description.key}\""
+    ]
+  },
+  "number": {
+    "keys": [
+      "comfort_wheel_setting",
+      "start_temperature_tap_water",
+      "stop_temperature_tap_water",
+      "bms_outdoor_temperature_input"
+    ],
+    "unique_id": [
+      "f\"{entry.entry_id}_{description.key}\""
+    ]
+  },
+  "switch": {
+    "keys": [
+      "enable_tap_water",
+      "hot_water_boost",
+      "enable_heat",
+      "enable_passive_cooling",
+      "enable_anti_legionella",
+      "enable_additional_heater_only"
+    ],
+    "unique_id": [
+      "f\"{entry.entry_id}_{description.key}\""
+    ]
+  },
+  "select": {
+    "keys": [
+      "outdoor_temperature_source"
+    ],
+    "unique_id": [
+      "f\"{entry.entry_id}_outdoor_temperature_source\""
+    ]
+  }
+}
