@@ -22,6 +22,9 @@
     "climate": {
       "hot_water": {
         "name": "Hot water thermostat"
+      },
+      "heating_cooling": {
+        "name": "Heating and cooling"
       }
     },
     "binary_sensor": {
@@ -134,6 +137,48 @@
       },
       "enable_additional_heater_only": {
         "name": "Enable additional heater only"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_control": "Check ownership confirmations, temperature bounds and the pump. Temporary settings may not have been safely restored."
+    },
+    "step": {
+      "init": {
+        "title": "Optional thermostats",
+        "description": "Optional beta controller. Leave disabled while Thermia Genesis or EMHASS controls the same settings. Room control needs a current indoor measurement; an omitted sensor uses the physical room sensor. Invalid or stale selected sensors have no fallback. Boost remains blocked without physical verification. Releasing control restores nothing: inspect all temporary pump settings first.",
+        "data": {
+          "controller_enabled": "Enable automatic thermostat control",
+          "confirm_other_controllers_disabled": "Other heating, cooling and boiler controllers are disabled",
+          "inside_sensor": "Room temperature sensor (optional)",
+          "inside_humidity_sensor": "Room humidity sensor (optional)",
+          "sensor_timeout": "Maximum sensor age (seconds)",
+          "confirm_native_boost": "Register 6257 Boost behavior is physically verified on this pump",
+          "release_external_state": "After pump inspection, abandon suspended control without restoring settings"
+        }
+      },
+      "profiles": {
+        "title": "Presets and timers",
+        "description": "These are software bounds, not recommendations or manufacturer limits. Temporary settings use verified restoration; an external change suspends control.",
+        "data": {
+          "heating_low_offset": "Low Mode heating reduction (C)",
+          "heating_vacation_temperature": "Vacation heating target (C)",
+          "heating_vacation_cooling_offset": "Vacation cooling target reduction (C)",
+          "max_heating_temperature": "Excess Energy room target (C)",
+          "charge_supply_temperature": "Excess Energy supply target (C)",
+          "heating_excess_heat_stop_offset": "Excess Energy heating-season offset (C)",
+          "heating_excess_hours": "Heating Excess Energy duration (hours)",
+          "hot_water_excess_hours": "Boiler Excess Energy duration (hours)",
+          "hot_water_low_hours": "Boiler Low Mode duration (hours)",
+          "hot_water_evening_start": "Boiler Low Mode start (C)",
+          "hot_water_evening_stop": "Boiler Low Mode stop (C)",
+          "hot_water_hysteresis": "Boiler target hysteresis (C)",
+          "cooling_humidity_enabled": "Enable cooling humidity guard",
+          "cooling_humidity_limit": "Cooling maximum humidity (%)",
+          "cooling_vacation_humidity_limit": "Vacation maximum humidity (%)",
+          "cooling_dew_point_margin": "Cooling dew-point margin (C)"
+        }
       }
     }
   }

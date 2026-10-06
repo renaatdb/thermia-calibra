@@ -22,6 +22,9 @@
     "climate": {
       "hot_water": {
         "name": "Warmwaterthermostaat"
+      },
+      "heating_cooling": {
+        "name": "Verwarming en koeling"
       }
     },
     "binary_sensor": {
@@ -134,6 +137,48 @@
       },
       "enable_additional_heater_only": {
         "name": "Alleen bijverwarming inschakelen"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_control": "Controleer de bevestigingen, temperatuurgrenzen en de pomp. Tijdelijke instellingen konden mogelijk niet veilig worden hersteld."
+    },
+    "step": {
+      "init": {
+        "title": "Optionele thermostaten",
+        "description": "Optionele testregeling. Laat uitgeschakeld zolang Thermia Genesis of EMHASS dezelfde instellingen bestuurt. Kamerregeling gebruikt een actuele kamersensor; zonder selectie wordt de fysieke kamersensor gebruikt. Een ongeldige of oude geselecteerde sensor krijgt geen vervangende waarde. Boost blijft geblokkeerd zonder fysieke controle. Vrijgeven herstelt niets: controleer eerst alle tijdelijke pompinstellingen.",
+        "data": {
+          "controller_enabled": "Automatische thermostaatregeling inschakelen",
+          "confirm_other_controllers_disabled": "Andere automatische regelaars voor verwarming, koeling en boiler zijn uitgeschakeld",
+          "inside_sensor": "Kamertemperatuursensor (optioneel)",
+          "inside_humidity_sensor": "Luchtvochtigheidssensor (optioneel)",
+          "sensor_timeout": "Maximale ouderdom sensorwaarde (seconden)",
+          "confirm_native_boost": "Boost via register 6257 is fysiek gecontroleerd op deze pomp",
+          "release_external_state": "Na controle van de pomp: geblokkeerde regeling vrijgeven zonder instellingen te herstellen"
+        }
+      },
+      "profiles": {
+        "title": "Voorkeuzestanden en timers",
+        "description": "Dit zijn softwaregrenzen, geen advies of fabriekslimieten. Tijdelijke instellingen worden gecontroleerd hersteld; bij een externe wijziging pauzeert de regeling.",
+        "data": {
+          "heating_low_offset": "Verwarmingsverlaging Low Mode (C)",
+          "heating_vacation_temperature": "Verwarmingstemperatuur Vacation (C)",
+          "heating_vacation_cooling_offset": "Verlaging koelgrens Vacation (C)",
+          "max_heating_temperature": "Kamertemperatuur Excess Energy (C)",
+          "charge_supply_temperature": "Aanvoertemperatuur Excess Energy (C)",
+          "heating_excess_heat_stop_offset": "Offset verwarmingsseizoen Excess Energy (C)",
+          "heating_excess_hours": "Duur verwarming Excess Energy (uren)",
+          "hot_water_excess_hours": "Duur boiler Excess Energy (uren)",
+          "hot_water_low_hours": "Duur boiler Low Mode (uren)",
+          "hot_water_evening_start": "Starttemperatuur boiler Low Mode (C)",
+          "hot_water_evening_stop": "Stoptemperatuur boiler Low Mode (C)",
+          "hot_water_hysteresis": "Boilerhysterese (C)",
+          "cooling_humidity_enabled": "Vochtbeveiliging voor koeling inschakelen",
+          "cooling_humidity_limit": "Maximale luchtvochtigheid koeling (%)",
+          "cooling_vacation_humidity_limit": "Maximale luchtvochtigheid Vacation (%)",
+          "cooling_dew_point_margin": "Dauwpuntmarge koeling (C)"
+        }
       }
     }
   }

@@ -38,6 +38,7 @@ class ThermiaCalibra:
     """A Thermia Calibra / Genesis heat pump reached through a Modbus unit."""
 
     def __init__(self, unit: ModbusUnit) -> None:
+        self.unit = unit
         self.coils = GenesisCoils(unit)
         self.input_registers = GenesisInputRegisters(unit)
         self.holding_registers = GenesisHoldingRegisters(unit)
