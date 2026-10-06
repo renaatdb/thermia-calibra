@@ -2,7 +2,27 @@
 
 All notable changes to this project are documented here.
 
-## 0.1.12b1 - Unreleased development candidate
+## 0.1.12b2 - Unreleased development candidate
+
+- Add a disabled-by-default heating/cooling thermostat and an explicit opt-in
+  automatic controller for both thermostat entities.
+- Heating supports Normal, Excess Energy, Low Mode and Vacation. Cooling
+  supports Normal and Vacation; combined mode restricts energy/low profiles
+  to heating. Hot water supports Normal, Excess Energy and timed Low Mode.
+- Reuse the MIT-licensed Genesis 0.1.12 control policy with a restricted
+  register/command adapter and the existing Home Assistant shared transport.
+- Persist temporary settings and write intentions, verify readback, recover
+  after restart and pause persistently on externally changed owned values.
+- Require explicit confirmation that competing controllers are disabled.
+  Leave all existing Genesis/EMHASS entities and automations untouched.
+- Native hot-water Boost at register 6257 requires separate physical
+  verification and confirmation; its source-policy ceiling remains 60 C.
+- Add temperature/humidity freshness checks, optional cooling humidity guard,
+  English/Dutch options and real Home Assistant/pure-policy regression tests.
+- Physical tests of the new controller remain outstanding. No installation,
+  stable release or changes to the already published b1 tag are implied.
+
+## 0.1.12b1 - 2026-10-06 (Pre-release)
 
 - Add an optional, disabled-by-default native hot-water climate entity with
   auto/off modes, paired start/stop targets and weighted tank temperature.

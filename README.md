@@ -12,8 +12,9 @@ written from 17 to 18 C and restored to 17 C on that pump. The other ten writes
 and other models have not been physically verified. Register addresses follow
 the domestic Genesis 17.1 protocol (ACMBDH01UG0402).
 
-The optional hot-water thermostat in 0.1.12b1 is a development candidate, not a
-published stable release. It still requires a physical test.
+The optional native hot-water view in 0.1.12b1 is a published pre-release,
+not a stable release. The two managed thermostats and presets in 0.1.12b2 are
+an unreleased development candidate. Physical controller tests are still needed.
 
 Requirements:
 
@@ -85,7 +86,7 @@ from the existing groups. An unsupported new group leaves those new entities
 unavailable without disabling the established registers. Four additional block
 reads are attempted per 30-second poll, even while the new entities are disabled.
 
-### Optional hot-water thermostat
+### Optional native hot-water view (automatic controller disabled)
 
 **Hot water thermostat** is disabled by default. Enable it from the existing
 device's entity list to use a thermostat card with the native start and stop
@@ -114,8 +115,67 @@ controller temperatures before retrying. There is no automatic rollback that
 could overwrite a subsequent controller or external automation change.
 
 Shared transport does not prevent two integrations or automations from changing
-the same settings. Avoid conflicting controllers. Vacation, PV surplus, low-mode
-presets and the separate Genesis integration's migration are not included.
+the same settings. Avoid conflicting controllers. The separate Genesis
+integration's entries and automations are not migrated.
+
+### Optional managed thermostats (0.1.12b2 candidate)
+
+Both climate entities are disabled by default. The additional automatic
+controller is also disabled in integration options. With it disabled, the
+existing hot-water view keeps its b1 behavior, the room thermostat is unavailable,
+and the new policy performs no reads or writes. Installation does not take
+over Thermia Genesis or EMHASS and does not rename their entities.
+
+Only enable automatic control after disabling every competing automation or
+integration that writes the same heating, cooling or boiler settings. Read-only
+monitoring can remain active. Shared transport cannot coordinate control policy
+across integrations. Ownership checks are best-effort fresh reads, not a
+cross-integration atomic transaction.
+
+1. Inspect the pump's current settings and make a current backup.
+2. Disable conflicting automatic writers explicitly; do not delete their
+   entities or automations as part of this beta test.
+3. Open this integration's options, enable the controller and acknowledge sole
+   ownership. Select a fresh indoor temperature sensor or use the physical
+   indoor sensor. A selected invalid/stale sensor has no silent fallback.
+4. Review the preset temperatures and durations. Enable the climate entities
+   and test one mode at a time while checking the physical pump.
+
+Heating/cooling supports Off, Heat, Cool and Heat/Cool. Heat/Cool requires a
+valid indoor reading and distinct lower/upper room targets. Cooling's room
+target is a Home Assistant policy, not a native Thermia room-cooling register.
+The optional humidity guard needs current temperature and humidity readings;
+it is not a substitute for hardware condensation protection.
+
+| Thermostat | Presets |
+| --- | --- |
+| Heating | Normal, Excess Energy, Low Mode, Vacation |
+| Cooling | Normal, Vacation |
+| Heat/Cool | Normal, Excess Energy (Heating Only), Low Mode (Heating Only), Vacation |
+| Hot water | Normal, Excess Energy, Low Mode |
+
+Heating Low Mode reduces the normal target (default 2 C), Vacation uses its
+configured room target (default 17 C). Heating Excess Energy temporarily uses
+fixed supply, bounded by the native heating maximum, for up to 12 hours by
+default. Boiler Low Mode defaults to 35/40 C for 24 hours before restoring the
+original pair. These defaults are policy choices, not recommendations.
+
+Boiler Excess Energy uses the source policy's native Boost register **6257**
+and **60/60 C** targets for up to 6 hours. It is refused by default: this register
+has not been physically verified on the user's pump. Do not enable its separate
+confirmation until its physical behavior has been verified. Anti-legionella,
+immersion-heater-only and Smart Grid writes are not exposed by this controller.
+
+Temporary overrides, deadlines and write intentions are saved before writes.
+Readback confirms each write; restart and controller disable attempt to restore
+the owned temporary values. Failed restoration stays pending. If another writer
+changes an owned value, automatic control pauses persistently rather than
+overwriting it. Check all physical settings before explicitly releasing the
+suspended journal in options: release abandons restoration and does not alter
+the pump. The thermostats report control warnings and remaining preset time.
+
+No energy-surplus detector or EMHASS automation is added: Excess Energy is a
+manual/service-selected preset. This beta still requires hardware validation.
 
 ## Installation
 

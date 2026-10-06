@@ -5,7 +5,9 @@ from __future__ import annotations
 import importlib.util
 import unittest
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, PropertyMock, patch
+import asyncio
+from datetime import UTC, datetime, timedelta
 
 HAS_HOME_ASSISTANT = importlib.util.find_spec("homeassistant") is not None
 
@@ -18,7 +20,10 @@ if HAS_HOME_ASSISTANT:
     from modbus_connection.mock import MockModbusConnection
 
     from custom_components.thermia_calibra.coordinator import ThermiaCalibraCoordinator
-    from custom_components.thermia_calibra.climate import ThermiaCalibraHotWaterClimate, async_setup_entry
+    from custom_components.thermia_calibra.climate import ThermiaCalibraHotWaterClimate, ThermiaCalibraRoomClimate, async_setup_entry
+    from custom_components.thermia_calibra.config_flow import ThermiaCalibraOptionsFlow
+    from custom_components.thermia_calibra.managed_control import DEFAULT_CONTROL_OPTIONS
+    from custom_components.thermia_calibra.vendor.genesis_policy.control import ControlEngine
     from custom_components.thermia_calibra.number import NUMBERS, ThermiaCalibraNumber
     from custom_components.thermia_calibra.vendor.thermia_calibra_modbus import ThermiaCalibra
 
@@ -127,7 +132,7 @@ class HomeAssistantHotWaterTests(unittest.IsolatedAsyncioTestCase):
     async def test_opt_in_platform_setup_writes_nothing(self):
         entities = []
         await async_setup_entry(self.entity.hass, self.entry, entities.extend)
-        self.assertEqual(len(entities), 1)
+        self.assertEqual(len(entities), 2)
         self.assertFalse(entities[0].entity_registry_enabled_default)
         self.assertEqual(entities[0].unique_id, "existing-entry_hot_water")
         self.assertEqual(entities[0].device_info["identifiers"], {("thermia_calibra", "pump:502:1")})
@@ -135,6 +140,7 @@ class HomeAssistantHotWaterTests(unittest.IsolatedAsyncioTestCase):
         self.coordinator.async_write_hot_water_enabled.assert_not_awaited()
 
     async def test_real_climate_state_and_capabilities(self):
+        self.assertEqual((self.entity.min_temp, self.entity.max_temp, self.entity.target_temperature_step), (20, 70, 0.5))
         self.assertTrue(self.entity.available)
         self.assertEqual(self.entity.state, "auto")
         self.assertEqual(self.entity.state_attributes["target_temp_low"], 45)
@@ -229,6 +235,143 @@ class HomeAssistantHotWaterTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HomeAssistantError):
             await ThermiaCalibraCoordinator.async_write_hot_water_enabled(self.coordinator, False)
         self.coordinator.async_request_refresh.assert_awaited_once()
+
+
+@unittest.skipUnless(HAS_HOME_ASSISTANT, "Requires Home Assistant; covered by the core-tests CI job")
+class HomeAssistantManagedClimateTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        await HomeAssistantHotWaterTests.asyncSetUp(self)
+        values = {"comfort_wheel": 23, "heating_enabled": False, "passive_cooling_enabled": False, "hot_water_start": 45, "hot_water_stop": 58}
+        self.coordinator.controller_enabled = True
+        self.coordinator.control_error = None
+        self.coordinator.effective_inside = 22.5
+        self.coordinator.effective_inside_humidity = 60
+        self.coordinator.engine = ControlEngine(values.get, None, None, DEFAULT_CONTROL_OPTIONS)
+        self.coordinator.engine.state.update(heating_mode="heat", heating_target=23, heating_low=20, heating_high=25, hot_water_mode="auto")
+        self.coordinator.control = SimpleNamespace(ready=True, value=values.get, options=DEFAULT_CONTROL_OPTIONS)
+        self.coordinator.async_control_command = AsyncMock()
+        self.room = ThermiaCalibraRoomClimate(self.coordinator, self.entry)
+        self.room.hass = self.entity.hass
+
+    async def asyncTearDown(self):
+        await self.connection.close()
+
+    async def test_room_identity_opt_in_and_real_core_state(self):
+        self.assertEqual(self.room.unique_id, "existing-entry_heating_cooling")
+        self.assertFalse(self.room.entity_registry_enabled_default)
+        self.assertEqual(self.room.device_info, self.entity.device_info)
+        self.assertTrue(self.room.available)
+        self.assertEqual(self.room.state, "heat")
+        self.assertEqual(self.room.state_attributes["temperature"], 23)
+        self.assertEqual(self.room.state_attributes["current_temperature"], 22.5)
+        self.assertEqual(self.room.current_humidity, 60)
+        self.assertEqual(self.room.preset_modes, ["Normal", "Excess Energy", "Low Mode", "Vacation"])
+        self.assertEqual(self.room.extra_state_attributes["normal_target_temperature"], 23)
+
+    async def test_room_heat_cool_range_and_cooling_presets(self):
+        self.coordinator.engine.state["heating_mode"] = "heat_cool"
+        self.assertEqual((self.room.target_temperature_low, self.room.target_temperature_high), (20, 25))
+        self.assertIsNone(self.room.target_temperature)
+        self.assertTrue(self.room.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE)
+        self.assertIn("Low Mode (Heating Only)", self.room.preset_modes)
+        self.coordinator.engine.state["heating_mode"] = "cool"
+        self.assertEqual(self.room.preset_modes, ["Normal", "Vacation"])
+
+    async def test_room_services_use_only_managed_controller(self):
+        await self.room.async_set_hvac_mode(HVACMode.COOL)
+        await self.room.async_set_temperature(temperature=24)
+        await self.room.async_set_preset_mode("Vacation")
+        self.assertEqual([call.args for call in self.coordinator.async_control_command.await_args_list], [
+            ("heating_mode", "cool"), ("heating_temperature_edit", {"temperature": 24}), ("heating_preset", "vacation")
+        ])
+        self.coordinator.async_write_hot_water_range.assert_not_awaited()
+
+    async def test_boiler_presets_and_managed_temperature_services(self):
+        self.assertEqual((self.entity.min_temp, self.entity.max_temp, self.entity.target_temperature_step), (30, 60, 1))
+        self.assertEqual((self.room.min_temp, self.room.max_temp, self.room.target_temperature_step), (10, 35, 1))
+        self.assertEqual(self.entity.unique_id, "existing-entry_hot_water")
+        self.assertEqual(self.entity.preset_modes, ["Normal", "Excess Energy", "Low Mode"])
+        await self.entity.async_set_preset_mode("Low Mode")
+        self.coordinator.async_control_command.assert_awaited_once_with("hot_water_mode", "evening")
+        await async_service_temperature_set(self.entity, SimpleNamespace(data={"target_temp_low": 46, "target_temp_high": 59}))
+        self.assertEqual(self.coordinator.async_control_command.await_args.args, ("hot_water_temperature_edit", {"target_temp_low": 46, "target_temp_high": 59}))
+        self.coordinator.async_write_hot_water_range.assert_not_awaited()
+        self.assertIn("low_mode_remaining_hours", self.entity.extra_state_attributes)
+
+    async def test_disabled_or_failed_controller_cannot_appear_available(self):
+        self.coordinator.controller_enabled = False
+        self.assertFalse(self.room.available)
+        self.assertEqual(self.room.preset_modes, [])
+        self.coordinator.controller_enabled = True
+        self.coordinator.control_error = "External controller changed the pump"
+        self.assertFalse(self.room.available)
+        self.assertFalse(self.entity.available)
+
+    async def test_room_activity_reads_demand_not_permission(self):
+        for code, expected in ((4, HVACAction.HEATING), (5, HVACAction.COOLING), (8, HVACAction.COOLING), (99, HVACAction.IDLE), (999, None)):
+            self.unit.input[1] = code
+            self.coordinator.data = await self.device.async_update_readings()
+            self.assertEqual(self.room.hvac_action, expected)
+
+    async def test_coordinator_serializes_command_and_refreshes_outside_lock(self):
+        lock = asyncio.Lock()
+        async def command(*args):
+            self.assertTrue(lock.locked())
+        async def refresh():
+            self.assertFalse(lock.locked())
+        coord = SimpleNamespace(_io_lock=lock, control=SimpleNamespace(command=command),
+            effective_inside=20, effective_outside=10, effective_inside_humidity=60,
+            async_request_refresh=refresh)
+        await ThermiaCalibraCoordinator.async_control_command(coord, "heating_mode", "heat")
+        self.assertIsNone(coord.control_error)
+
+    async def test_selected_stale_room_sensor_has_no_native_fallback(self):
+        now = datetime.now(UTC)
+        sample = SimpleNamespace(state="24", attributes={"unit_of_measurement": "C"}, last_reported=now - timedelta(hours=1))
+        control = SimpleNamespace(options=DEFAULT_CONTROL_OPTIONS | {"inside_sensor": "sensor.room"}, value=lambda key: {"indoor_temperature": 20, "room_sensor_alarm": False}.get(key))
+        coord = SimpleNamespace(control=control, hass=SimpleNamespace(states=SimpleNamespace(get=lambda entity_id: sample)))
+        self.assertIsNone(ThermiaCalibraCoordinator.effective_inside.fget(coord))
+        sample.last_reported = now
+        self.assertEqual(ThermiaCalibraCoordinator.effective_inside.fget(coord), 24)
+        sample.state = "unavailable"
+        self.assertIsNone(ThermiaCalibraCoordinator.effective_inside.fget(coord))
+
+    async def test_native_room_temperature_requires_current_alarm_readback(self):
+        values = {"indoor_temperature": 20, "room_sensor_alarm": None}
+        coord = SimpleNamespace(control=SimpleNamespace(options=DEFAULT_CONTROL_OPTIONS, value=values.get))
+        self.assertIsNone(ThermiaCalibraCoordinator.effective_inside.fget(coord))
+        values["room_sensor_alarm"] = False
+        self.assertEqual(ThermiaCalibraCoordinator.effective_inside.fget(coord), 20)
+
+
+@unittest.skipUnless(HAS_HOME_ASSISTANT, "Requires Home Assistant; covered by the core-tests CI job")
+class HomeAssistantOptionsTests(unittest.IsolatedAsyncioTestCase):
+    async def test_optional_sensor_fields_have_no_invalid_empty_defaults(self):
+        entry = SimpleNamespace(options={}, runtime_data=None)
+        with patch.object(ThermiaCalibraOptionsFlow, "config_entry", new_callable=PropertyMock, return_value=entry):
+            flow = ThermiaCalibraOptionsFlow()
+            form = await flow.async_step_init()
+            defaults = form["data_schema"]({})
+            self.assertNotIn("inside_sensor", defaults)
+            self.assertNotIn("inside_humidity_sensor", defaults)
+            self.assertFalse(defaults["controller_enabled"])
+
+    async def test_clearing_optional_sensor_is_persisted(self):
+        entry = SimpleNamespace(options={"inside_sensor": "sensor.old_room"}, runtime_data=None)
+        with patch.object(ThermiaCalibraOptionsFlow, "config_entry", new_callable=PropertyMock, return_value=entry):
+            flow = ThermiaCalibraOptionsFlow()
+            await flow.async_step_init({"controller_enabled": False, "confirm_other_controllers_disabled": False})
+            result = await flow.async_step_profiles({})
+            self.assertEqual(result["data"]["inside_sensor"], "")
+            self.assertFalse(result["data"]["controller_enabled"])
+
+    async def test_automatic_control_requires_ownership_acknowledgment(self):
+        entry = SimpleNamespace(options={}, runtime_data=None)
+        with patch.object(ThermiaCalibraOptionsFlow, "config_entry", new_callable=PropertyMock, return_value=entry):
+            flow = ThermiaCalibraOptionsFlow()
+            await flow.async_step_init({"controller_enabled": True, "confirm_other_controllers_disabled": False})
+            result = await flow.async_step_profiles({})
+            self.assertEqual(result["errors"], {"base": "invalid_control"})
 
 
 if __name__ == "__main__":
