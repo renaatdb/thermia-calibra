@@ -6,9 +6,14 @@ Unofficial Home Assistant custom integration for Thermia Calibra heat pumps. It 
 
 This integration is developed and tested on a **Thermia Calibra Cool 7 BW / Genesis**. Other Thermia models may use different registers and are not yet confirmed to work.
 
-The new native settings in 0.1.11b1 are a beta test candidate. Their register addresses
-follow the domestic Genesis 17.1 protocol (ACMBDH01UG0402); they have been tested
-with simulated Modbus replies, but still need verification on the physical pump.
+The eleven native settings in 0.1.11b1 were read and compared with one physical
+Calibra Cool 7 BW controller on 2026-10-06. The heating-season stop was also
+written from 17 to 18 C and restored to 17 C on that pump. The other ten writes
+and other models have not been physically verified. Register addresses follow
+the domestic Genesis 17.1 protocol (ACMBDH01UG0402).
+
+The optional hot-water thermostat in 0.1.12b1 is a development candidate, not a
+published stable release. It still requires a physical test.
 
 Requirements:
 
@@ -27,6 +32,7 @@ Requirements:
 - comfort-wheel and hot-water temperature settings
 - external outdoor-temperature input through Modbus and a selectable source
 - optional native heating limits, seven heating-curve points and passive-cooling supply target
+- optional hot-water thermostat showing the existing native start/stop range
 - 30-second local polling through Home Assistant's shared Modbus connection
 
 Some duplicate or model-specific sensors and the additional-heater-only switch are disabled by default. They can be enabled from the entity settings when needed.
@@ -78,6 +84,38 @@ The new heating, curve-input and cooling register groups are polled separately
 from the existing groups. An unsupported new group leaves those new entities
 unavailable without disabling the established registers. Four additional block
 reads are attempted per 30-second poll, even while the new entities are disabled.
+
+### Optional hot-water thermostat
+
+**Hot water thermostat** is disabled by default. Enable it from the existing
+device's entity list to use a thermostat card with the native start and stop
+temperatures. The separate number entities, enable switch, device identifiers
+and existing automations remain unchanged. This is a view of the pump's native
+control, not a second thermostat algorithm or a room-temperature controller.
+
+- **Auto** enables normal tap-water production (coil 8); **Off** disables only
+  that production, not the whole pump, heating or anti-legionella protection.
+- The lower target is the start temperature (holding register 22); the upper
+  target is the stop temperature (23). Both targets must be supplied together.
+- Software bounds match the existing controls: start 20..65 C, stop 30..70 C,
+  with start strictly below stop. The thermostat uses 0.5 C increments. These
+  bounds are not manufacturer limits or a recommendation to change temperatures.
+- Current temperature is the weighted tank temperature (input register 17),
+  not a room temperature. Activity comes from the pump's current demand.
+- No startup, periodic, preset or restoration writes are introduced. No new
+  registers or additional periodic reads are needed for this view.
+
+Each requested write is read back. Paired requests are serialized with the
+existing tap-water number and switch writes within this integration. Changes
+are ordered to keep the intermediate start/stop range valid. Two Modbus writes
+are not an atomic transaction: if one fails, the first may already have taken
+effect. The request reports an error and refreshes actual state; inspect both
+controller temperatures before retrying. There is no automatic rollback that
+could overwrite a subsequent controller or external automation change.
+
+Shared transport does not prevent two integrations or automations from changing
+the same settings. Avoid conflicting controllers. Vacation, PV surplus, low-mode
+presets and the separate Genesis integration's migration are not included.
 
 ## Installation
 

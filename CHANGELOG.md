@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented here.
 
+## 0.1.12b1 - Unreleased development candidate
+
+- Add an optional, disabled-by-default native hot-water climate entity with
+  auto/off modes, paired start/stop targets and weighted tank temperature.
+- Preserve all existing numbers, switches, entry and device identifiers.
+- Validate paired writes, serialize with legacy tap-water controls, order
+  changes to maintain a valid intermediate range and verify controller readback.
+- Refresh actual state on errors, including partially applied changes; do not
+  automatically roll back or run a second control algorithm.
+- Add English/Dutch labels and transport/real Home Assistant regression tests.
+- No PV, vacation, low-mode policy engine or automatic migration is included.
+- Physical validation of this thermostat is still required. No stable release
+  has been published from this candidate.
+
+### Physical validation of 0.1.11b1 on 2026-10-06
+
+- User confirmed all eleven native read values on a Calibra Cool 7 BW.
+- Heating-season stop was tested at 17 -> 18 -> 17 C, including pump readback.
+- User reported no Modbus problems in filtered Home Assistant logs. The other
+  ten writes and other models remain unverified.
+
 ## 0.1.11b1 - 2026-10-05 (Pre-release)
 
 - Rename the visible integration and HACS entry to Thermia Calibra Modbus.

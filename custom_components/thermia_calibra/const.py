@@ -13,4 +13,4 @@ DEFAULT_UNIT_ID = 1
 CONF_UNIT_ID = "unit_id"
 SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORMS = ["binary_sensor", "number", "select", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "climate", "number", "select", "sensor", "switch"]

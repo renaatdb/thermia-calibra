@@ -92,3 +92,24 @@ class ThermiaCalibraCoordinator(DataUpdateCoordinator[UpdateReport]):
             ) from err
         finally:
             await self.async_request_refresh()
+
+    async def async_write_hot_water_range(self, start: float, stop: float) -> None:
+        """Refresh actual state even when a paired write only partially succeeds."""
+        try:
+            await self.device.async_write_hot_water_range(start, stop)
+        except (AttributeError, ModbusError, ValueError) as err:
+            raise HomeAssistantError(
+                f"Failed to set Thermia hot-water range: {err}. "
+                "Check both controller temperatures before retrying."
+            ) from err
+        finally:
+            await self.async_request_refresh()
+
+    async def async_write_hot_water_enabled(self, enabled: bool) -> None:
+        """Write and verify the normal tap-water production mode."""
+        try:
+            await self.device.async_write_hot_water_enabled(enabled)
+        except (AttributeError, ModbusError, ValueError) as err:
+            raise HomeAssistantError(f"Failed to set Thermia hot-water mode: {err}") from err
+        finally:
+            await self.async_request_refresh()
