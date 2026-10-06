@@ -19,6 +19,11 @@
     }
   },
   "entity": {
+    "climate": {
+      "hot_water": {
+        "name": "Hot water thermostat"
+      }
+    },
     "binary_sensor": {
       "hot_water_operational_status": {
         "name": "Hot water operational status"

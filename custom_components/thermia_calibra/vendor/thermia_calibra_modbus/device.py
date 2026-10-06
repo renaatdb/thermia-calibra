@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 
+from .hot_water import START_FIELD, STOP_FIELD, validate_hot_water_range
 from .native_settings import NATIVE_SETTINGS, validate_native_setting
 from .readings import (
     GenesisCoils,
@@ -46,6 +47,7 @@ class ThermiaCalibra:
         self.heating_curve_inputs = GenesisHeatingCurveInputs(unit)
         self.cooling_settings = GenesisCoolingSettings(unit)
         self._native_write_lock = asyncio.Lock()
+        self._hot_water_write_lock = asyncio.Lock()
 
     HEATPUMP_STATUS_BY_CODE = {
         1: "Manual operation",
@@ -138,11 +140,85 @@ class ThermiaCalibra:
 
     async def async_write_coil(self, field: str, value: bool) -> None:
         """Write a Thermia coil control."""
+        if field == "enable_tap_water":
+            async with self._hot_water_write_lock:
+                await self.coils.write(field, bool(value))
+            return
         await self.coils.write(field, bool(value))
 
     async def async_write_holding_register(self, field: str, value: float) -> None:
         """Write a Thermia holding-register control."""
+        if field in (START_FIELD, STOP_FIELD):
+            async with self._hot_water_write_lock:
+                await self.holding_registers.write(field, value)
+            return
         await self.holding_registers.write(field, value)
+
+    async def async_write_hot_water_range(self, start: float, stop: float) -> None:
+        """Verify a paired change while keeping every intermediate range valid."""
+        start, stop = validate_hot_water_range(start, stop)
+        component = self.holding_registers
+        async with self._hot_water_write_lock:
+            await component.async_update(notify=False)
+            expected = validate_hot_water_range(
+                component.start_temperature_tap_water,
+                component.stop_temperature_tap_water,
+                check_step=False,
+            )
+            # Raise the stop first when the new start crosses the old stop.
+            changes = [(START_FIELD, start), (STOP_FIELD, stop)]
+            if start >= expected[1]:
+                changes.reverse()
+            for field, value in changes:
+                index = 0 if field == START_FIELD else 1
+                if math.isclose(expected[index], value, rel_tol=0, abs_tol=0.005):
+                    continue
+                await component.async_update(notify=False)
+                actual = (
+                    component.start_temperature_tap_water,
+                    component.stop_temperature_tap_water,
+                )
+                if actual != expected:
+                    raise ValueError(
+                        "Hot-water settings changed during the request; "
+                        "read the controller before retrying"
+                    )
+                candidate = list(expected)
+                candidate[index] = value
+                validate_hot_water_range(*candidate, check_step=False)
+                await component.write(field, value)
+                await component.async_update(notify=False)
+                actual = (
+                    component.start_temperature_tap_water,
+                    component.stop_temperature_tap_water,
+                )
+                if any(
+                    value is None
+                    or not math.isclose(value, wanted, rel_tol=0, abs_tol=0.005)
+                    for value, wanted in zip(actual, candidate)
+                ):
+                    raise ValueError(
+                        "Hot-water write was not confirmed; "
+                        "the range may be partially changed"
+                    )
+                expected = tuple(candidate)
+            component.notify()
+
+    async def async_write_hot_water_enabled(self, enabled: bool) -> None:
+        """Verify the normal tap-water enable coil without changing other modes."""
+        if not isinstance(enabled, bool):
+            raise ValueError("Hot-water enable must be a boolean")
+        async with self._hot_water_write_lock:
+            await self.coils.async_update(notify=False)
+            if self.coils.enable_tap_water is None:
+                raise ValueError("Hot-water enable has no controller readback")
+            if self.coils.enable_tap_water == enabled:
+                return
+            await self.coils.write("enable_tap_water", enabled)
+            await self.coils.async_update(notify=False)
+            if self.coils.enable_tap_water != enabled:
+                raise ValueError("Hot-water mode write was not confirmed by the controller")
+            self.coils.notify()
 
     async def async_write_hot_water_register(self, field: str, value: float) -> None:
         """Write a Thermia hot-water control register."""
