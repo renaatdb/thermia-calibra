@@ -7,6 +7,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, PropertyMock, patch
 import asyncio
+from datetime import UTC, datetime, timedelta
 
 HAS_HOME_ASSISTANT = importlib.util.find_spec("homeassistant") is not None
 
@@ -139,6 +140,7 @@ class HomeAssistantHotWaterTests(unittest.IsolatedAsyncioTestCase):
         self.coordinator.async_write_hot_water_enabled.assert_not_awaited()
 
     async def test_real_climate_state_and_capabilities(self):
+        self.assertEqual((self.entity.min_temp, self.entity.max_temp, self.entity.target_temperature_step), (20, 70, 0.5))
         self.assertTrue(self.entity.available)
         self.assertEqual(self.entity.state, "auto")
         self.assertEqual(self.entity.state_attributes["target_temp_low"], 45)
@@ -285,6 +287,8 @@ class HomeAssistantManagedClimateTests(unittest.IsolatedAsyncioTestCase):
         self.coordinator.async_write_hot_water_range.assert_not_awaited()
 
     async def test_boiler_presets_and_managed_temperature_services(self):
+        self.assertEqual((self.entity.min_temp, self.entity.max_temp, self.entity.target_temperature_step), (30, 60, 1))
+        self.assertEqual((self.room.min_temp, self.room.max_temp, self.room.target_temperature_step), (10, 35, 1))
         self.assertEqual(self.entity.unique_id, "existing-entry_hot_water")
         self.assertEqual(self.entity.preset_modes, ["Normal", "Excess Energy", "Low Mode"])
         await self.entity.async_set_preset_mode("Low Mode")
@@ -320,6 +324,24 @@ class HomeAssistantManagedClimateTests(unittest.IsolatedAsyncioTestCase):
             async_request_refresh=refresh)
         await ThermiaCalibraCoordinator.async_control_command(coord, "heating_mode", "heat")
         self.assertIsNone(coord.control_error)
+
+    async def test_selected_stale_room_sensor_has_no_native_fallback(self):
+        now = datetime.now(UTC)
+        sample = SimpleNamespace(state="24", attributes={"unit_of_measurement": "C"}, last_reported=now - timedelta(hours=1))
+        control = SimpleNamespace(options=DEFAULT_CONTROL_OPTIONS | {"inside_sensor": "sensor.room"}, value=lambda key: {"indoor_temperature": 20, "room_sensor_alarm": False}.get(key))
+        coord = SimpleNamespace(control=control, hass=SimpleNamespace(states=SimpleNamespace(get=lambda entity_id: sample)))
+        self.assertIsNone(ThermiaCalibraCoordinator.effective_inside.fget(coord))
+        sample.last_reported = now
+        self.assertEqual(ThermiaCalibraCoordinator.effective_inside.fget(coord), 24)
+        sample.state = "unavailable"
+        self.assertIsNone(ThermiaCalibraCoordinator.effective_inside.fget(coord))
+
+    async def test_native_room_temperature_requires_current_alarm_readback(self):
+        values = {"indoor_temperature": 20, "room_sensor_alarm": None}
+        coord = SimpleNamespace(control=SimpleNamespace(options=DEFAULT_CONTROL_OPTIONS, value=values.get))
+        self.assertIsNone(ThermiaCalibraCoordinator.effective_inside.fget(coord))
+        values["room_sensor_alarm"] = False
+        self.assertEqual(ThermiaCalibraCoordinator.effective_inside.fget(coord), 20)
 
 
 @unittest.skipUnless(HAS_HOME_ASSISTANT, "Requires Home Assistant; covered by the core-tests CI job")

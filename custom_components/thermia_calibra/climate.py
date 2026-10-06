@@ -50,6 +50,7 @@ class ThermiaCalibraHotWaterClimate(
     _attr_max_temp = STOP_MAX
     _attr_target_temperature_step = TEMPERATURE_STEP
     _attr_precision = 0.1
+    _managed_temperature_bounds = (30, 60, 1)
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TURN_ON
@@ -82,6 +83,18 @@ class ThermiaCalibraHotWaterClimate(
     @property
     def _managed(self) -> bool:
         return getattr(self.coordinator, "controller_enabled", False)
+
+    @property
+    def min_temp(self):
+        return self._managed_temperature_bounds[0] if self._managed else self._attr_min_temp
+
+    @property
+    def max_temp(self):
+        return self._managed_temperature_bounds[1] if self._managed else self._attr_max_temp
+
+    @property
+    def target_temperature_step(self):
+        return self._managed_temperature_bounds[2] if self._managed else self._attr_target_temperature_step
 
     @property
     def supported_features(self):
@@ -237,6 +250,7 @@ class ThermiaCalibraRoomClimate(ThermiaCalibraHotWaterClimate):
     _attr_min_temp = 10
     _attr_max_temp = 35
     _attr_target_temperature_step = 1
+    _managed_temperature_bounds = (10, 35, 1)
 
     def __init__(self, coordinator, entry):
         super().__init__(coordinator, entry)
