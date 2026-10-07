@@ -1,6 +1,9 @@
 # Thermia Calibra Modbus
 
-Unofficial Home Assistant custom integration for Thermia Calibra heat pumps. It uses Home Assistant's native shared Modbus TCP layer, so integrations using the same connection do not open competing Modbus clients.
+Unofficial Home Assistant custom integration for Thermia Calibra heat pumps.
+It uses Home Assistant's native shared Modbus TCP layer. Integrations using
+that shared layer and matching connection details can reuse one connection;
+older integrations with their own clients do not automatically join it.
 
 ## Status
 
@@ -12,11 +15,21 @@ written from 17 to 18 C and restored to 17 C on that pump. The other ten writes
 and other models have not been physically verified. Register addresses follow
 the domestic Genesis 17.1 protocol (ACMBDH01UG0402).
 
-0.1.13b1 is a development candidate focused on direct pump access for
-external energy management. It removes the additional automatic thermostats
-and presets introduced in 0.1.12b2. Physical controller tests and Home Assistant
-validation must pass before a release or installation. The development branch
-and draft pull request are for review only; they do not update Home Assistant.
+**0.1.13b1 is a published beta, not a stable release**, focused on direct pump
+access for external energy management. It removes the additional automatic
+thermostats and presets introduced in 0.1.12b2. The beta is available through
+[GitHub Releases](https://github.com/renaatdb/thermia-calibra/releases/tag/v0.1.13b1)
+and HACS. The development pull request remains separate from the stable branch.
+
+On 2026-10-06, the beta was installed through HACS and loaded in Home Assistant
+Core 2026.9.4 on one Calibra Cool 7 BW. User-provided screenshots showed matching
+idle readings with Thermia Genesis 0.0.14: brine and condenser temperatures,
+tank temperatures, outdoor temperature, compressor speed and demand/cooling
+status. Filtered Home Assistant log screenshots showed no new Calibra or Modbus
+error. These observations are an initial read-only check, not validation of all
+operating states or writable controls. Controlled writes and their physical
+effect, including Boost, still need to be checked before a stable release or
+production automation migration. Automated tests do not replace those checks.
 
 Requirements:
 
@@ -130,6 +143,12 @@ comfort or appliance-scheduling decisions and performs no periodic, startup or
 shutdown policy writes. The native hot-water card's Auto mode means normal
 tap-water production is enabled on the pump, not that a second controller runs.
 
+Floor mass can be planned as a heat or cold buffer by the external energy
+management system. The pump's heating curve remains a native heating setting,
+not a buffer scheduler or a cooling curve. Do not continuously change its seven
+points merely to enable buffer charging. External execution must respect the
+installation's comfort, supply-temperature and condensation limits.
+
 Direct commands read the current control group, write the requested value and
 read it back before reporting success. A single boiler start/stop change also
 checks the fresh sibling target; it never changes that sibling automatically.
@@ -177,6 +196,11 @@ Until this integration is included in the default HACS catalogue, add it as a cu
 4. Select **Integration** as the type.
 5. Find **Thermia Calibra Modbus**, choose **Download**, and restart Home Assistant.
 
+To install this beta, enable the repository's pre-release/beta versions in HACS
+and explicitly select **v0.1.13b1** in the download version selector. Check the
+integration version after restarting Home Assistant. Publishing a release does
+not install it automatically and does not migrate existing automations.
+
 ### Manual
 
 Copy `custom_components/thermia_calibra` into `config/custom_components/thermia_calibra`, then restart Home Assistant.
@@ -194,6 +218,12 @@ Defaults are port `502` and unit ID `1`. No separate Modbus YAML hub is required
 
 When installed through HACS, install an offered update and restart Home Assistant. Existing config entries and entity unique IDs are retained.
 
+If the optional 0.1.12b2 automatic controller was never enabled and no temporary
+presets were used, do not enable it just to upgrade. The new version still checks
+its saved recovery state before connecting. Leave the working EMHASS automations
+and other Thermia integrations unchanged until their dependencies are mapped
+and a controlled migration is agreed.
+
 Before upgrading from 0.1.12b2, safely disable its optional automatic controller
 and confirm restoration of temporary pump settings using that version. The new
 version reads the old recovery journal without changing or deleting it. If
@@ -208,6 +238,13 @@ The beta-only Heating and cooling climate entity is no longer provided. Its
 old registry entry may remain unavailable; remove that unused entry only after
 checking that no automations depend on it. Other integrations and their
 entities are not removed, renamed or migrated by this update.
+
+For an unused leftover entry, open **Heating and cooling / Verwarming en
+koeling**, open its entity settings and choose **Delete / Verwijderen**. Delete
+only that entity, not the device or integration. This removes the saved entity
+registration; it does not change pump settings. Keep **Hot water control /
+Warmwaterbediening**, which is still provided by the integration. A new
+installation of 0.1.13b1 does not create the removed room thermostat.
 
 The display name changed from Thermia Calibra Cool 7 BW to Thermia Calibra Modbus
 in 0.1.11. The repository, integration domain `thermia_calibra`, existing entity
@@ -247,3 +284,4 @@ Released under the [MIT License](LICENSE).
 
 Native-setting definitions were adapted from `thermia-genesis-modbus` 0.1.9.
 See [third-party notices](THIRD_PARTY_NOTICES.md).
+
