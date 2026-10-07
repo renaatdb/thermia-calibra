@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from contextlib import nullcontext
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,6 +16,11 @@ from .const import DOMAIN, SCAN_INTERVAL
 from .vendor.thermia_calibra_modbus import ThermiaCalibra, UpdateReport
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def _device_call(coordinator, method, *args):
+    async with getattr(coordinator, "_io_lock", nullcontext()):
+        return await method(*args)
 
 
 class ThermiaCalibraCoordinator(DataUpdateCoordinator[UpdateReport]):
@@ -33,10 +40,16 @@ class ThermiaCalibraCoordinator(DataUpdateCoordinator[UpdateReport]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
+        self.entry = entry
+        self._io_lock = asyncio.Lock()
         self._failed: frozenset[str] = frozenset()
 
     async def _async_update_data(self) -> UpdateReport:
         """Fetch data from the heat pump."""
+        async with self._io_lock:
+            return await self._async_poll_device()
+
+    async def _async_poll_device(self) -> UpdateReport:
         try:
             report = await self.device.async_update_readings()
         except ModbusError as err:
@@ -56,28 +69,67 @@ class ThermiaCalibraCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def async_write_coil(self, field: str, value: bool) -> None:
         """Write a Thermia coil and refresh Home Assistant state."""
         try:
-            await self.device.async_write_coil(field, value)
+            await _device_call(self, self.device.async_write_coil, field, value)
         except (AttributeError, ModbusError, ValueError) as err:
-            raise HomeAssistantError(f"Failed to write Thermia switch {field}") from err
-
-        await self.async_request_refresh()
+            raise HomeAssistantError(
+                f"Failed to write Thermia switch {field}: {err}. "
+                "Check actual settings before retrying."
+            ) from err
+        finally:
+            await self.async_request_refresh()
 
     async def async_write_holding_register(self, field: str, value: float) -> None:
         """Write a Thermia holding register and refresh Home Assistant state."""
         try:
-            await self.device.async_write_holding_register(field, value)
+            await _device_call(self, self.device.async_write_holding_register, field, value)
         except (AttributeError, ModbusError, ValueError) as err:
-            raise HomeAssistantError(f"Failed to write Thermia number {field}") from err
-
-        await self.async_request_refresh()
+            raise HomeAssistantError(
+                f"Failed to write Thermia number {field}: {err}. "
+                "Check actual settings before retrying."
+            ) from err
+        finally:
+            await self.async_request_refresh()
 
     async def async_write_hot_water_register(self, field: str, value: float) -> None:
         """Write a Thermia hot-water register and refresh Home Assistant state."""
         try:
-            await self.device.async_write_hot_water_register(field, value)
+            await _device_call(self, self.device.async_write_hot_water_register, field, value)
         except (AttributeError, ModbusError, ValueError) as err:
             raise HomeAssistantError(
-                f"Failed to write Thermia hot-water control {field}"
+                f"Failed to write Thermia hot-water control {field}: {err}. "
+                "Check actual settings before retrying."
             ) from err
+        finally:
+            await self.async_request_refresh()
 
-        await self.async_request_refresh()
+    async def async_write_native_setting(self, field: str, value: float) -> None:
+        """Write a native setting with controller readback verification."""
+        try:
+            await _device_call(self, self.device.async_write_native_setting, field, value)
+        except (AttributeError, ModbusError, ValueError) as err:
+            raise HomeAssistantError(
+                f"Failed to write Thermia setting {field}: {err}"
+            ) from err
+        finally:
+            await self.async_request_refresh()
+
+    async def async_write_hot_water_range(self, start: float, stop: float) -> None:
+        """Refresh actual state even when a paired write only partially succeeds."""
+        try:
+            await _device_call(self, self.device.async_write_hot_water_range, start, stop)
+        except (AttributeError, ModbusError, ValueError) as err:
+            raise HomeAssistantError(
+                f"Failed to set Thermia hot-water range: {err}. "
+                "Check both controller temperatures before retrying."
+            ) from err
+        finally:
+            await self.async_request_refresh()
+
+    async def async_write_hot_water_enabled(self, enabled: bool) -> None:
+        """Write and verify the normal tap-water production mode."""
+        try:
+            await _device_call(self, self.device.async_write_hot_water_enabled, enabled)
+        except (AttributeError, ModbusError, ValueError) as err:
+            raise HomeAssistantError(f"Failed to set Thermia hot-water mode: {err}") from err
+        finally:
+            await self.async_request_refresh()
